@@ -2,7 +2,7 @@ Java Documentation located in dist/javadoc
 
 Command for encrypting: java AES e -length 128/256 keyFile inputFile
 Command for decryption: java AES d -length 128/256 keyFile encryptedinputFile
-Default command for 128-bit: java AES e/d keyFile inputFile <= Defaults to AES-128
+Default command for 128-bit ECB: java AES e/d keyFile inputFile <= Defaults to AES-128
 
 NOTE: 128/256 means either 128 or 256. e/d means either e or d.
 
