@@ -1,77 +1,12 @@
+Java Documentation located in dist/javadoc
+
 Command for encrypting: java AES e -length 128/256 keyFile inputFile
 Command for decryption: java AES d -length 128/256 keyFile encryptedinputFile
 Default command for 128-bit: java AES e/d keyFile inputFile <= Defaults to AES-128
 
 NOTE: 128/256 means either 128 or 256. e/d means either e or d.
+
 We also have another source file called MCTables.java that uses look up tables for the mixColumns multiplication.
 
-For our program, we will strictly be using capital letters for hex values > 9 (i.e. A,B,C,D,E,F).
+In addition to implementing AES-256, we also modified our program to implement AES-128. Using the -length argument, it can be determined whether the program will run AES-256 or 128. If the -length argument is not mentioned, then it will run AES-128 by default. Also, the program will print an error if a user tries to run AES-256 using a 128-bit key, and vice versa.
 
-In addition to implementing AES-256, we also modified our program to implement AES-128 (Extra Credit Part 1). Using the -length argument, it can be determined whether the program will run AES-256 or 128. If the -length argument is not mentioned, then it will run AES-128 by default. Also, the program will print an error if a user tries to run AES-256 using a 128-bit key, and vice versa.
-
-
-
-Throughput of 100,000+ line input file
-
-3,631,650 Bytes
-8.214 seconds
-Encrypt throughput: 0.44212929145361574 MB/s
-
-3631650 Bytes
-9.335 seconds
-Decrypt throughput: 0.3890358864488484 MB/s
-
-
-Through of 100,000 line input file
-
-3300000 Bytes
-5.606 seconds
-Encrypt throughput: 0.5886550124866216 MB/s
-
-3300000 Bytes
-5.85 seconds
-Decrypt throughput: 0.5641025641025641MB/s
-
-READ BELOW
-
-|
-|
-V
-
-IMPORTANT UPDATE:
-
-We further optimized our code by converting string operations into artihmetic operations such that the program will run faster. 
-
-We achieved these results:
-
-
-
-Throughput of 1,000,000 line input file (input128):
-
-Encryption:
-
-Input File Size: 31.5 MegaBytes
-Time: 11.413 seconds
-Throughput: 2.89143958643652 MB/s
-
-Decryption:
-
-Input File Size: 31.5 MegaBytes
-Time: 11.57 seconds.
-Throughput: 2.8522039757994815 MB/s
-
-
-
-Throughput of 1,000,000 line input file (input256):
-
-Encryption:
-
-Input File Size: 31.5 MegaBytes
-Time: 14.339 seconds.
-Throughput: 2.3014157193667617 MB/s
-
-Decryption:
-
-Input File Size: 31.5 MegaBytes
-Time: 14.721 seconds.
-Throughput: 2.2416955369879763 MB/s
