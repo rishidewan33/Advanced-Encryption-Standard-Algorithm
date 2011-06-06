@@ -15,7 +15,6 @@ try:
         hexfile = open(sys.argv[1],'w')
         for i in xrange(int(sys.argv[2])):
                 hexfile.write(gen())
-
         hexfile.close()
 	
 except Exception:
