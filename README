@@ -1,12 +1,15 @@
 Java Documentation located in dist/javadoc
 
-Command for encrypting: java AES e -length 128/256 keyFile inputFile
-Command for decryption: java AES d -length 128/256 keyFile encryptedinputFile
-Default command for 128-bit ECB: java AES e/d keyFile inputFile <= Defaults to AES-128
+Command for encrypting: java AES e [-length] [-mode] keyFile inputFile
+Command for decryption: java AES d [-length] [-mode] keyFile encryptedinputFile
 
-NOTE: 128/256 means either 128 or 256. e/d means either e or d.
+-length is an optional argument which denotes the keysize that the user intends to use for the AES cipher (128 or 256).
+-mode is an optional argument which denotes the mode of operation which will be used for the AES cipher (ECB or CBC).
 
-We also have another source file called MCTables.java that uses look up tables for the mixColumns multiplication.
+The default options are: -length 128, and -mode ECB.
 
-In addition to implementing AES-256, we also modified our program to implement AES-128. Using the -length argument, it can be determined whether the program will run AES-256 or 128. If the -length argument is not mentioned, then it will run AES-128 by default. Also, the program will print an error if a user tries to run AES-256 using a 128-bit key, and vice versa.
+Note: In order for a more secure encryption, it is recommended that you use CBC. To use CBC, you need to add an Initialization Vector to your key file
+in a new line after the key, which is a 32-character length hex character.
 
+Files that are encrypted will have the file name: [inputfilename].enc
+"" decrypted "": [encryptedfilename].dec

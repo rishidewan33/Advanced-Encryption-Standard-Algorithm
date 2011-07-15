@@ -198,7 +198,6 @@ public class AES {
                     line = input.readLine();
                 }
             }
-            System.out.println(MatrixToString(initvector));
             input.close();
             out.close();
         } 
