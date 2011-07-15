@@ -108,9 +108,9 @@ public class AES {
             {
                 keyFileIndex+=2;
                 keysizecheck = Integer.parseInt(args[keyFileIndex-1]);
-                if(args[4].equals("-mode")) //Both -length and -mode options were given
+                if(args[3].equals("-mode")) //Both -length and -mode options were given
                 {
-                    mode = args[5].equals("ecb") ? Mode.ECB : Mode.CBC;
+                    mode = args[4].equals("ecb") ? Mode.ECB : Mode.CBC;
                     keyFileIndex+=2;
                 }
                 
@@ -120,25 +120,31 @@ public class AES {
             if(key.length() *4 != keysizecheck)
             {
                 throw new Exception("Error: Attemping to use a " + key.length() * 4 + "-bit key with AES-"+keysizecheck);
-            }
-            
+            }           
             input = new BufferedReader(new FileReader(args[keyFileIndex+1]));
             if(mode == Mode.CBC)
             {
                 iv = keyreader.readLine();
-                assert iv.length() == 32;
+                if(iv == null)
+                {
+                    throw new Exception("Error: Initialization Vector required for CBC Mode.");
+                }
+                else if(iv.length() != 32)
+                {
+                    throw new Exception("Error: Size of Initialization Vector must be 32 bytes.");
+                }
             }
             ftw += args[keyFileIndex+1];
         }
         catch (Exception e) 
         {
             System.err.println(e.getMessage() + '\n');
+            System.exit(1);
         }
         
         AES aes = new AES();
         if (args[0].equalsIgnoreCase("e")) 
         {
-            double time1 = (double) System.currentTimeMillis();
             out = new FileWriter(ftw + ".enc");
             int numRounds = 10 + (((key.length() * 4 - 128) / 32));
             String line = input.readLine();
@@ -149,12 +155,12 @@ public class AES {
                 for (int i = 0; i < 4; i++)
                 {
                     for (int j = 0; j < 4; j++) {
-                        initvector[j][i] = Integer.parseInt(line.substring((8 * i) + (2 * j), (8 * i) + (2 * j + 2)), 16);
+                        initvector[j][i] = Integer.parseInt(iv.substring((8 * i) + (2 * j), (8 * i) + (2 * j + 2)), 16);
                     }
-                }                
+                }
             }
             while (line != null) {
-                if (aes.validline(line)) 
+                if (aes.validline(line)) //If line is valid (i.e. contains valid hex characters, encrpyt. Otherwise, skip line. 
                 {
                     if (line.length() < 32) {
                         line = String.format("%" + 32 + "s", line).replace(' ', '0');
@@ -192,49 +198,65 @@ public class AES {
                     line = input.readLine();
                 }
             }
-            double time2 = (double) System.currentTimeMillis();
+            System.out.println(MatrixToString(initvector));
             input.close();
             out.close();
-            File f = new File(ftw + ".enc");
-            double total = ((time2 - time1) / 1000.0);
-            System.out.println("Encryption throughput: " + ((double) (f.length() / 1000000.0) / total) + " MB/s");
-        } else if (args[0].equalsIgnoreCase("d")) {
-            double time1 = (double) System.currentTimeMillis();
+        } 
+        else if (args[0].equalsIgnoreCase("d")) //Decryption Mode 
+        {
             out = new FileWriter(ftw + ".dec");
             int numRounds = 10 + (((key.length() * 4 - 128) / 32));
             String line = input.readLine();
-            int[][] bytematrix;
+            int[][] state = new int[4][4];
+            int[][] initvector = new int[4][4];
+            int[][] nextvector = new int[4][4];
             int[][] keymatrix = aes.keySchedule(key);
-
-            while (line != null) {
-                bytematrix = new int[4][4];
-                for (int i = 0; i < bytematrix.length; i++) //Parses line into a matrix
+            if(mode == Mode.CBC) //Parse Initialization Vector
+            {
+                for (int i = 0; i < 4; i++)
                 {
-                    for (int j = 0; j < bytematrix[0].length; j++) {
-                        bytematrix[j][i] = Integer.parseInt(line.substring((8 * i) + (2 * j), (8 * i) + (2 * j + 2)), 16);
+                    for (int j = 0; j < 4; j++) {
+                        initvector[j][i] = Integer.parseInt(iv.substring((8 * i) + (2 * j), (8 * i) + (2 * j + 2)), 16);
+                    }
+                }                
+            }
+            while (line != null) {
+                state = new int[4][4];
+                for (int i = 0; i < state.length; i++) //Parses line into a matrix
+                {
+                    for (int j = 0; j < state[0].length; j++) {
+                        state[j][i] = Integer.parseInt(line.substring((8 * i) + (2 * j), (8 * i) + (2 * j + 2)), 16);
                     }
                 }
-                aes.addRoundKey(bytematrix, aes.subKey(keymatrix, numRounds));
-                aes.invSubBytes(bytematrix);
-                aes.invShiftRows(bytematrix);
-                for (int i = numRounds - 1; i > 0; i--) {
-                    aes.addRoundKey(bytematrix, aes.subKey(keymatrix, i));
-                    aes.invMixColumns(bytematrix);
-                    aes.invSubBytes(bytematrix); //implements the Sub-Bytes subroutine.
-                    aes.invShiftRows(bytematrix); //implements Shift-Rows subroutine.
+                if(mode == Mode.CBC)
+                {
+                    aes.deepCopy2DArray(nextvector,state);
                 }
-                aes.addRoundKey(bytematrix, aes.subKey(keymatrix, 0));
-                out.write(MatrixToString(bytematrix) + '\n');
+                aes.addRoundKey(state, aes.subKey(keymatrix, numRounds));
+                for (int i = numRounds - 1; i > 0; i--) {
+                    aes.invShiftRows(state);
+                    aes.invSubBytes(state);
+                    aes.addRoundKey(state, aes.subKey(keymatrix, i));
+                    aes.invMixColumns(state);
+                }
+                aes.invShiftRows(state);
+                aes.invSubBytes(state); 
+                aes.addRoundKey(state, aes.subKey(keymatrix, 0));
+                if(mode == Mode.CBC)
+                {
+                    System.out.println(MatrixToString(initvector));
+                    aes.addRoundKey(state, initvector);
+                    aes.deepCopy2DArray(initvector,nextvector);
+                }
+                out.write(MatrixToString(state) + '\n');
                 line = input.readLine();
             }
-            double time2 = (double) System.currentTimeMillis();
             input.close();
             out.close();
-            double total = ((time2 - time1) / 1000.0);
-            File f = new File(ftw + ".dec");
-            System.out.println("Took " + total + " seconds.");
-            System.out.println("Decryption throughput: " + ((double) (f.length() / 1000000.0) / total) + " MB/s");
-        } else {
+
+        } 
+        else 
+        {
             System.err.println("Usage for Encryption: java AES e keyFile inputFile");
             System.err.println("Usage for Decryption: java AES d keyFile encryptedinputFile");
         } 
@@ -245,6 +267,15 @@ public class AES {
      * @param line  The line who's validity we check
      * @return A boolean to determine validity
      */
+    private void deepCopy2DArray(int[][] copyTo, int[][] copyFrom)
+    {
+        assert copyTo.length == copyFrom.length && copyTo[0].length == copyFrom[0].length;
+        for(int i = 0; i < copyTo.length;i++)
+        {
+            System.arraycopy(copyFrom[i], 0, copyTo[i], 0, copyTo[0].length);
+        }
+    }
+    
     private boolean validline(String line)
     {
         for (int i = 0; i < line.length(); i++) {
@@ -427,14 +458,17 @@ public class AES {
         return 0;
     }
 
-    public int[][] invMixColumns(int[][] arr) {
+    public void invMixColumns(int[][] arr) {
         int[][] tarr = new int[4][4];
+        for(int i = 0; i < 4; i++)
+        {
+            System.arraycopy(arr[i], 0, tarr[i], 0, 4);
+        }
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 4; j++) {
-                tarr[i][j] = invMcHelper(arr, invgalois, i, j);
+                arr[i][j] = invMcHelper(tarr, invgalois, i, j);
             }
         }
-        return tarr;
     }
 
     private int invMcHelper(int[][] arr, int[][] igalois, int i, int j) //Helper method for invMixColumns
@@ -460,11 +494,11 @@ public class AES {
     {
         if (a == 9) {
             return MCTables.mc9[b / 16][b % 16];
-        } else if (a == 11) {
+        } else if (a == 0xb) {
             return MCTables.mc11[b / 16][b % 16];
-        } else if (a == 13) {
+        } else if (a == 0xd) {
             return MCTables.mc13[b / 16][b % 16];
-        } else if (a == 14) {
+        } else if (a == 0xe) {
             return MCTables.mc14[b / 16][b % 16];
         }
         return 0;
