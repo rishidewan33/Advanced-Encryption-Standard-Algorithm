@@ -163,7 +163,7 @@ public class AES {
                 if (aes.validline(line)) //If line is valid (i.e. contains valid hex characters, encrpyt. Otherwise, skip line. 
                 {
                     if (line.length() < 32) {
-                        line = String.format("%" + 32 + "s", line).replace(' ', '0');
+                        line = String.format("%032x",Integer.parseInt(line, 16));
                     }
                     state = new int[4][4];
                     for (int i = 0; i < 4; i++) //Parses line into a matrix
@@ -243,7 +243,6 @@ public class AES {
                 aes.addRoundKey(state, aes.subKey(keymatrix, 0));
                 if(mode == Mode.CBC)
                 {
-                    System.out.println(MatrixToString(initvector));
                     aes.addRoundKey(state, initvector);
                     aes.deepCopy2DArray(initvector,nextvector);
                 }
@@ -252,7 +251,6 @@ public class AES {
             }
             input.close();
             out.close();
-
         } 
         else 
         {
@@ -261,11 +259,7 @@ public class AES {
         } 
     }
 
-    /**
-     * Checks the validity of the input line.
-     * @param line  The line who's validity we check
-     * @return A boolean to determine validity
-     */
+    //Helper method which executes a deep copy of a 2D array. (dest,src)
     private void deepCopy2DArray(int[][] copyTo, int[][] copyFrom)
     {
         assert copyTo.length == copyFrom.length && copyTo[0].length == copyFrom[0].length;
@@ -274,7 +268,12 @@ public class AES {
             System.arraycopy(copyFrom[i], 0, copyTo[i], 0, copyTo[0].length);
         }
     }
-    
+
+    /**
+     * Checks the validity of the input line.
+     * @param line  The line who's validity we check
+     * @return A boolean to determine validity
+     */
     private boolean validline(String line)
     {
         for (int i = 0; i < line.length(); i++) {
