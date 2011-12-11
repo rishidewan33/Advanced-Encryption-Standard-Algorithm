@@ -12,4 +12,12 @@ Note: In order for a more secure encryption, it is recommended that you use CBC.
 in a new line after the key, which is a 32-character length hex character.
 
 Files that are encrypted will have the file name: [inputfilename].enc
-"" decrypted "": [encryptedfilename].dec
+For decrypted files: [encryptedfilename].dec
+
+Format for input: A file with each line containing 32 hex characters (hence, 16 bytes on each line).
+
+An example of such input:
+
+0A935D11496532BC1004865ABDCA4295
+00112233445566778899AABBCCDDEEFF
+   ....
